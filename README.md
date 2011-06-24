@@ -19,7 +19,7 @@ The serial version of the algorithm is in C++, there are no dependencies. For
 the distributed version, you must have Anthill installed. You can find more
 about Anthill and how to install it on its [homepage][1].
 
-## Building
+### Building
 
 You can build the project using the CMake tool. With it you can easily configure
 the location of the Anthill files and other needed configurations.
