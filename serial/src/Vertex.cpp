@@ -31,4 +31,36 @@ void Vertex::removeAttribute(const Attribute& a) {
 
 // =================== //
 
+VertexSet::VertexSet() {
+
+}
+
+// =================== //
+
+VertexSet::VertexSet(std::set<int> s) {
+    this->vset = s;
+}
+
+// =================== //
+
+void VertexSet::addVertex(int id) {
+    this->vset.insert(id);
+}
+
+// =================== //
+
+void VertexSet::removeVertex(int id) {
+    this->vset.erase(id);
+}
+
+// =================== //
+
+
+VertexSet::~VertexSet() {
+    this->vset.clear();
+}
+
+// =================== //
+
+
 };
