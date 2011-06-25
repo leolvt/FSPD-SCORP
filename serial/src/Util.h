@@ -1,15 +1,14 @@
 #ifndef SCORP_UTIL_H
 #define SCORP_UTIL_H
 
-#include "Vertex.h"
-#include "Edge.h"
 #include <string>
 #include <map>
+#include "Graph.h"
 
 namespace SCORP {
 
-void parseInput(std::string filename, std::map<int, Vertex>& v, VertexSet& vs, 
-        EdgeSet& es);
+void parseInput(std::string filename, vHash& vertices, adjHash& edges,
+        IntSet& vset);
 
 };
 

@@ -1,10 +1,12 @@
 #include <fstream>
 #include "Util.h"
 
+#define SWAP(a,b) {int tmp = a; a = b; b = tmp;}
+
 namespace SCORP {
 
-void parseInput(std::string filename, std::map<int, Vertex>& v, VertexSet& vs, 
-                EdgeSet& es) {
+void parseInput(std::string filename, vHash& vertices, adjHash& edges,
+        IntSet& vset) {
 
     // Open file
     std::ifstream iFile(filename.c_str(), std::ifstream::in);
@@ -18,15 +20,14 @@ void parseInput(std::string filename, std::map<int, Vertex>& v, VertexSet& vs,
     // Read Vertices
     for (int i = 0; i < numVertices; i++) {
         iFile >> numAttrib;
-        Vertex vtx(i+1);
+        AttribSet& aSet = vertices[i+1];
         for (int a = 0; a < numAttrib; a++) {
             std::string aStr;
             iFile >> aStr;
             Attribute A(aStr);
-            vtx.addAttribute(A);
+            aSet.insert(A);
         }
-        v[i+1] = vtx;
-        vs.addVertex(i+1);
+        vset.insert(i+1);
     }
 
     // Read number of Edges
@@ -38,8 +39,9 @@ void parseInput(std::string filename, std::map<int, Vertex>& v, VertexSet& vs,
         int to;
         iFile >> from;
         iFile >> to;
-        Edge E(from, to);
-        es.addEdge(E);
+        edges[from].insert(to);
+        SWAP(from,to);
+        edges[from].insert(to);
     }
 
 }
