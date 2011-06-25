@@ -21,11 +21,16 @@ class Vertex {
 
 class VertexSet {
     public:
+        typedef std::set<int>::iterator iterator;
         VertexSet();
         VertexSet(std::set<int> s);
+        ~VertexSet();
         void addVertex(int id);
         void removeVertex(int id);
-        ~VertexSet();
+        bool hasVertex(int id);
+        int size();
+        iterator begin();
+        iterator end();
     private:
         std::set<int> vset;
 };

@@ -10,6 +10,7 @@ class Graph {
     public:
         Graph(VertexSet& vs, EdgeSet& es);
         ~Graph();
+        void print();
     private:
         VertexSet vs;
         EdgeSet es;

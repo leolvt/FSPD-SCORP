@@ -48,8 +48,38 @@ EdgeSet::~EdgeSet() {
 
 // =================== //
 
-void EdgeSet::addEdge(const Edge& e ) {
+void EdgeSet::addEdge(const Edge& e) {
     eset.insert(e);
+}
+
+// =================== //
+
+void EdgeSet::removeEdge(const Edge& e) {
+    eset.erase(e);
+}
+
+// =================== //
+
+bool EdgeSet::hasEdge(const Edge& e) {
+    return eset.find(e) != eset.end();
+}
+
+// =================== //
+
+int EdgeSet::size() {
+    return eset.size();
+}
+
+// =================== //
+
+EdgeSet::iterator EdgeSet::begin() {
+    return eset.begin();
+}
+
+// =================== //
+
+EdgeSet::iterator EdgeSet::end() {
+    return eset.end();
 }
 
 // =================== //

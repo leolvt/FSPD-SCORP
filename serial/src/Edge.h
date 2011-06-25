@@ -10,7 +10,6 @@ class Edge {
         Edge(int from, int to);
         bool operator==(const Edge& e) const;
         bool operator<(const Edge& e) const;
-    private:
         int from;
         int to;
 };
@@ -19,10 +18,17 @@ class Edge {
 
 class EdgeSet {
     public:
+        typedef std::set<Edge>::iterator iterator;
+
         EdgeSet();
         EdgeSet(std::set<Edge> s);
-        void addEdge(const Edge& e);
         ~EdgeSet();
+        void addEdge(const Edge& e);
+        void removeEdge(const Edge& e);
+        bool hasEdge(const Edge& e);
+        int size();
+        iterator begin();
+        iterator end();
     private:
         std::set<Edge> eset;
 };

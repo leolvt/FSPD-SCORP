@@ -31,6 +31,12 @@ void Vertex::removeAttribute(const Attribute& a) {
 
 // =================== //
 
+bool Vertex::hasAttribute(const Attribute& a) {
+    this->attributes.find(a) != attributes.end();
+}
+
+// =================== //
+
 VertexSet::VertexSet() {
 
 }
@@ -39,6 +45,12 @@ VertexSet::VertexSet() {
 
 VertexSet::VertexSet(std::set<int> s) {
     this->vset = s;
+}
+
+// =================== //
+
+VertexSet::~VertexSet() {
+    this->vset.clear();
 }
 
 // =================== //
@@ -55,12 +67,28 @@ void VertexSet::removeVertex(int id) {
 
 // =================== //
 
-
-VertexSet::~VertexSet() {
-    this->vset.clear();
+bool VertexSet::hasVertex(int id) {
+    return vset.find(id) != vset.end();
 }
 
 // =================== //
 
+int VertexSet::size() {
+    return vset.size();
+}
+
+// =================== //
+
+VertexSet::iterator VertexSet::begin() {
+    return vset.begin();
+}
+
+// =================== //
+
+VertexSet::iterator VertexSet::end() {
+    return vset.end();
+}
+
+// =================== //
 
 };

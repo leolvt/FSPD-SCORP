@@ -8,8 +8,8 @@
 
 namespace SCORP {
 
-void parseInput(std::string filename, std::map<int, Vertex> v, VertexSet vs, 
-        EdgeSet es);
+void parseInput(std::string filename, std::map<int, Vertex>& v, VertexSet& vs, 
+        EdgeSet& es);
 
 };
 

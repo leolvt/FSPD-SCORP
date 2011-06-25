@@ -3,14 +3,19 @@
 
 namespace SCORP {
 
-void parseInput(std::string filename, std::map<int, Vertex> v, VertexSet vs, 
-                EdgeSet es) {
+void parseInput(std::string filename, std::map<int, Vertex>& v, VertexSet& vs, 
+                EdgeSet& es) {
 
+    // Open file
     std::ifstream iFile(filename.c_str(), std::ifstream::in);
     int numVertices;
     int numEdges;
     int numAttrib;
+
+    // Read number of Vertices
     iFile >> numVertices;
+
+    // Read Vertices
     for (int i = 0; i < numVertices; i++) {
         iFile >> numAttrib;
         Vertex vtx(i+1);
@@ -21,9 +26,13 @@ void parseInput(std::string filename, std::map<int, Vertex> v, VertexSet vs,
             vtx.addAttribute(A);
         }
         v[i+1] = vtx;
+        vs.addVertex(i+1);
     }
+
+    // Read number of Edges
     iFile >> numEdges;
 
+    // Read Edges
     for (int i = 0; i < numEdges; i++) {
         int from;
         int to;
