@@ -1,4 +1,5 @@
 #include <iostream>
+#include "QuasiClique.h"
 #include "Graph.h"
 #include "Util.h"
 using namespace std;
@@ -13,13 +14,9 @@ int main(int argc, const char *argv[]) {
     adjHash Edges;
     IntSet vSet;
     parseInput(argv[1], Vertices, Edges, vSet);
-    cout << Vertices.size() << " " << Edges.size() << " " << 
-        vSet.size() << endl;
 
-    cout << "Building graph" << endl;
-    Graph G(vSet, Edges);
-    G.print();
-    cout << "Is quasi-clique (0.5,1):  " << G.isQuasiClique(0.5, 1) << endl;
+    cout << "Starting process" << endl;
+    findQuasiCliques(vSet, Edges, 0.5, 3);
 
     return 0;
 }
