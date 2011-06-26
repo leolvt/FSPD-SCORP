@@ -12,4 +12,6 @@ set(SCORP_SOURCE
     ${GRAPH_SRC}
 )
 
+set(CMAKE_CXX_FLAGS_DEBUG "-pg")
+
 add_executable(scorp_serial ${SCORP_SOURCE})

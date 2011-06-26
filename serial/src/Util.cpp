@@ -1,23 +1,30 @@
 #include <fstream>
+#include <iostream>
 #include "Util.h"
 
 #define SWAP(a,b) {int tmp = a; a = b; b = tmp;}
 
 namespace SCORP {
 
-void parseInput(std::string filename, vHash& vertices, adjHash& edges,
+bool parseInput(std::string filename, vHash& vertices, adjHash& edges,
         IntSet& vset) {
 
     // Open file
+    std::cout << "File: " << filename.c_str() << std::endl;
     std::ifstream iFile(filename.c_str(), std::ifstream::in);
-    int numVertices;
+    int numVertices = 0;
     int numEdges;
     int numAttrib;
+
+    if (!iFile.is_open()) {
+        return false;
+    }
 
     // Read number of Vertices
     iFile >> numVertices;
 
     // Read Vertices
+    std::cout << "Lendo Vertices (" << numVertices << ")" << std::endl;
     for (int i = 0; i < numVertices; i++) {
         iFile >> numAttrib;
         AttribSet& aSet = vertices[i+1];
@@ -34,6 +41,7 @@ void parseInput(std::string filename, vHash& vertices, adjHash& edges,
     iFile >> numEdges;
 
     // Read Edges
+    std::cout << "Lendo Arestas ("<< numEdges <<")" << std::endl;
     for (int i = 0; i < numEdges; i++) {
         int from;
         int to;
@@ -44,6 +52,7 @@ void parseInput(std::string filename, vHash& vertices, adjHash& edges,
         edges[from].insert(to);
     }
 
+    return true;
 }
 
 };

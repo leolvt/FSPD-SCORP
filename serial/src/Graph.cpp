@@ -48,6 +48,22 @@ bool Graph::isQuasiClique(double gamma, int min_size) {
 
 // =================== //
 
+int Graph::getDegree(int vIdx) {
+    return this->eSet[vIdx].size();
+}
+
+// =================== //
+
+void Graph::removeVertex(int vIdx) {
+    this->vSet.erase(vIdx);
+    IntSet::iterator it;
+    for (it = vSet.begin(); it != vSet.end(); it++) {
+        eSet[*it].erase(vIdx);
+    }
+}
+
+// =================== //
+
 void Graph::print() {
     // Print Vertices
     IntSet::iterator u;

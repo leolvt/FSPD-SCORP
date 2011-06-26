@@ -17,6 +17,8 @@ class Graph {
     public:
         Graph(IntSet vSet, adjHash& Edges);
         bool isQuasiClique(double gamma, int minSize);
+        int getDegree(int vIdx);
+        void removeVertex(int vIdx);
         void print();
     private:
         IntSet vSet;
