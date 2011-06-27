@@ -7,8 +7,7 @@
 
 namespace SCORP {
 
-bool parseInput(std::string filename, vHash& vertices, adjHash& edges,
-        IntSet& vset);
+bool parseInput(std::string filename, adjHash& edges, IntSet& vset);
 
 };
 

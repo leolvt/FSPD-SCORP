@@ -10,17 +10,16 @@ int main(int argc, const char *argv[]) {
     if (argc < 2) return 1;
 
     cout << "Parsing Input" << endl;
-    vHash Vertices;
     adjHash Edges;
     IntSet vSet;
-    if (!parseInput(argv[1], Vertices, Edges, vSet)) {
+    if (!parseInput(argv[1], Edges, vSet)) {
         cout << "Erro ao ler entrada!" << endl;
         return 1;
     }
 
     cout << "Starting process" << endl;
     cout.flush();
-    findQuasiCliques(vSet, Edges, 0.5, 20);
+    findQuasiCliques(vSet, Edges, 0.7, 15);
 
     return 0;
 }

@@ -7,6 +7,10 @@
 namespace SCORP {
 
 // =================== //
+int pr1 = 0;
+int pr2 = 0;
+int pr3 = 0;
+
 
 IntSet
 getReachable(IntSet X, adjHash& edges, int k) {
@@ -23,17 +27,32 @@ getReachable(IntSet X, adjHash& edges, int k) {
 
 // =================== //
 
+bool 
+isQC(IntSet vSet, adjHash& edges, double gamma, int minSize) {
+    if (vSet.size() < minSize) return false;
+    int threshold = (int) ceil(gamma*(vSet.size()-1));
+    IntSet::iterator u;
+    IntSet::iterator v;
+    for (u = vSet.begin(); u != vSet.end(); u++) {
+        int degree = 0;
+        for (v = edges[*u].begin(); v != edges[*u].end(); v++) {
+            if (vSet.find(*v) != vSet.end()) {
+                degree++;
+            }
+        }
+        if (degree < minSize) return false;
+    }
+    return true;
+}
+
+// =================== //
+
 std::list<Candidate> 
 process(Candidate C, double gamma, int minSize, adjHash& edges) {
-   
+  
     std::list<Candidate> newCands;
     IntSet::iterator it;
 
-    // Create union of X and candExt
-    IntSet Union(C.X);
-    Union.insert(C.candExt.begin(), C.candExt.end());
-    Graph uG(Union, edges);
-    
     // Diameter (Reachability) prunning 
     if (C.X.size() > 0) {
         IntSet reachable = getReachable(C.X, edges, 2);
@@ -43,7 +62,7 @@ process(Candidate C, double gamma, int minSize, adjHash& edges) {
             it++;
             if (reachable.find(*aux) == reachable.end()) {
                 C.candExt.erase(aux);
-                uG.removeVertex(*aux);
+                pr1++;
             }
         }
     } 
@@ -54,9 +73,18 @@ process(Candidate C, double gamma, int minSize, adjHash& edges) {
     while (it != C.candExt.end()) {
         IntSet::iterator aux = it;
         it++;
-        if (uG.getDegree(*aux) < threshold) {
+
+        int degree = 0;
+        IntSet::iterator i;
+        for (i = edges[*aux].begin(); i != edges[*aux].end(); i++) {
+            if (C.X.find(*i) != C.X.end() || 
+                    C.candExt.find(*i) != C.candExt.end()) {
+                degree++;
+            }
+        }
+
+        if (degree  < threshold) {
             C.candExt.erase(aux);
-            uG.removeVertex(*aux);
         }
     }
 
@@ -86,7 +114,6 @@ process(Candidate C, double gamma, int minSize, adjHash& edges) {
             if (inDegree + extDegree < uThreshold) {
                 numRemoved++;
                 C.candExt.erase(aux);
-                uG.removeVertex(*aux);
             }
         }
     }
@@ -117,14 +144,12 @@ process(Candidate C, double gamma, int minSize, adjHash& edges) {
     }
     if (failVertice) {
         C.candExt.clear();
-        uG = Graph(C.X, edges);
     }
 
     // Check if Union is quasiclique
-    Union = C.X;
+    IntSet Union(C.X);
     Union.insert(C.candExt.begin(), C.candExt.end());
-    uG = Graph(Union, edges);
-    if (uG.isQuasiClique(gamma, minSize)) {
+    if (isQC(Union, edges, gamma, minSize)) {
         // As it is a quaisclique, we don't need to process the rest of the 
         // tree.
 
@@ -136,7 +161,7 @@ process(Candidate C, double gamma, int minSize, adjHash& edges) {
     }
     else {
         // Checa X
-        if ( Graph(C.X, edges).isQuasiClique(gamma, minSize) ) {
+        if ( isQC(C.X, edges, gamma, minSize) ) {
             IntSet::iterator it;
             for (it = C.X.begin(); it != C.X.end(); it++) {
                 std::cout << *it << " ";
@@ -176,6 +201,7 @@ void
 findQuasiCliques(IntSet vset, adjHash& edges, double gamma, int minSize) {
     Candidate start;
     start.candExt = vset;
+    double numProcessed = 0.0;
 
     int min = (int) ceil(gamma*(minSize-1));
     IntSet::iterator it = start.candExt.begin();
@@ -186,6 +212,7 @@ findQuasiCliques(IntSet vset, adjHash& edges, double gamma, int minSize) {
             start.candExt.erase(aux);
         }
     }
+    std::cerr << "Num Vertices: " << start.candExt.size() << std::endl;
 
     std::stack<Candidate> qcCands;
     qcCands.push(start);
@@ -193,6 +220,7 @@ findQuasiCliques(IntSet vset, adjHash& edges, double gamma, int minSize) {
         // Take a candidate
         Candidate C = qcCands.top();
         qcCands.pop();
+        numProcessed++;
         // Process it
         std::list<Candidate> newCands = process(C, gamma, minSize, edges);
         // Push the new ones
@@ -201,6 +229,11 @@ findQuasiCliques(IntSet vset, adjHash& edges, double gamma, int minSize) {
             qcCands.push(*it);
         }
     }
+    
+    std::cerr << "Total Processed: " << numProcessed << std::endl;
+    std::cerr << "Pr1: " << pr1 << std::endl;
+    std::cerr << "Pr2: " << pr2 << std::endl;
+    std::cerr << "Pr3: " << pr3 << std::endl;
 }
 
 

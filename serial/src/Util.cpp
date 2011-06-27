@@ -6,8 +6,7 @@
 
 namespace SCORP {
 
-bool parseInput(std::string filename, vHash& vertices, adjHash& edges,
-        IntSet& vset) {
+bool parseInput(std::string filename, adjHash& edges, IntSet& vset) {
 
     // Open file
     std::cout << "File: " << filename.c_str() << std::endl;
@@ -27,12 +26,9 @@ bool parseInput(std::string filename, vHash& vertices, adjHash& edges,
     std::cout << "Lendo Vertices (" << numVertices << ")" << std::endl;
     for (int i = 0; i < numVertices; i++) {
         iFile >> numAttrib;
-        AttribSet& aSet = vertices[i+1];
         for (int a = 0; a < numAttrib; a++) {
             std::string aStr;
             iFile >> aStr;
-            Attribute A(aStr);
-            aSet.insert(A);
         }
         vset.insert(i+1);
     }
