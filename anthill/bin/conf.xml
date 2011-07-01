@@ -1,0 +1,27 @@
+<?xml version="1.0"?>
+<config>
+	<hostdec>
+		<host name="localhost"/>
+    </hostdec>
+
+	<placement>
+		<filter name="ManagerFilter" libname="libmanager.so" instances="1"/> 
+		<filter name="ProcessFilter" libname="libprocess.so" instances="1"/> 
+    </placement>
+
+	<layout>
+		<stream>
+			<from filter="ManagerFilter" port="out"/>
+			<to filter="ProcessFilter" port="in" policy="broadcast"/>
+		</stream>
+		<stream>
+			<from filter="ProcessFilter" port="newWork"/>
+			<to filter="ManagerFilter" port="newWork"/>
+		</stream>
+		<stream>
+			<from filter="ProcessFilter" port="needMore"/>
+			<to filter="ManagerFilter" port="needMore"/>
+		</stream>
+    </layout>
+
+</config>

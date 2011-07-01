@@ -1,0 +1,37 @@
+#ifndef PROCESS_FILTER_H
+#define PROCESS_FILTER_H
+
+#include <queue>
+#include <fstream>
+#include "eventAPI.h"
+
+class ProcessFilter: public AHFilter
+{
+    public:
+        ProcessFilter();
+        ~ProcessFilter();
+
+    private:
+        std::ofstream log;
+        std::queue<int> workQueue;
+        bool stopWorking;
+        int msgId;
+
+        pthread_t procThread;
+        pthread_mutex_t mWorkQueue;
+        pthread_mutex_t mWorkStatus;
+        pthread_mutex_t mLog;
+
+        streamInputHandler sIn;
+        streamOutputHandler sNewWork;
+        streamOutputHandler sNeedMore;
+
+        static void* process(void* param);
+        bool hasMoreWork();
+        bool canStop();
+
+        int handleNewWork(AHData* msg);
+        constructFunctions(ProcessFilter);
+};
+
+#endif  /* PROCESS_FILTER_H */
