@@ -46,6 +46,7 @@ ManagerFilter::handleNewWork(AHData* msg)
 
     // Add more work to the queue
     // TODO
+    if (val == 26) val = -1;
     AHData* m = new AHData(new int(val), sizeof(int), sOut);
     sendMsg(m);
 

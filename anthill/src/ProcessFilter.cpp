@@ -72,14 +72,10 @@ ProcessFilter::canStop()
 bool 
 ProcessFilter::hasMoreWork()
 {
-    pthread_mutex_lock(&mLog);
-    log << "Has More Work?";
     bool value;
     pthread_mutex_lock(&mWorkQueue);
     value = !workQueue.empty();
     pthread_mutex_unlock(&mWorkQueue);
-    log << value << std::endl;
-    pthread_mutex_unlock(&mLog);
     return value;
 }
 
@@ -95,15 +91,9 @@ ProcessFilter::process(void* param)
     ProcessFilter* pf = static_cast<ProcessFilter*>(param);
     while(!pf->canStop())
     {
-        pthread_mutex_lock(&pf->mLog);
-        pf->log << "Loop up!" << std::endl;
-        pthread_mutex_unlock(&pf->mLog);
 
         while (pf->hasMoreWork())
         {
-            pthread_mutex_lock(&pf->mLog);
-            pf->log << "Inside!" << std::endl;
-            pthread_mutex_unlock(&pf->mLog);
 
             // Get work from queue
             pthread_mutex_lock(&pf->mWorkQueue);
@@ -130,10 +120,7 @@ ProcessFilter::process(void* param)
         needMoreData[1] = pf->msgId;
         AHData* data = new AHData(needMoreData, sizeof(int)*2, pf->sNeedMore);
         pf->sendMsg(data);
-        sleep(5);
-        pthread_mutex_lock(&pf->mLog);
-        pf->log << "Wake up!" << std::endl;
-        pthread_mutex_unlock(&pf->mLog);
+        sleep(1);
     }
     
     pf->closeEventList(pf->sIn);
