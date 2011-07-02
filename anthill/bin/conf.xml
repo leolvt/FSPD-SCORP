@@ -15,6 +15,10 @@
 			<to filter="ProcessFilter" port="in" policy="broadcast"/>
 		</stream>
 		<stream>
+			<from filter="ManagerFilter" port="workRequest"/>
+            <to filter="ProcessFilter" port="workRequest" policy="broadcast"/>
+		</stream>
+		<stream>
 			<from filter="ProcessFilter" port="newWork"/>
 			<to filter="ManagerFilter" port="newWork"/>
 		</stream>

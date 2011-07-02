@@ -5,25 +5,25 @@
 
 ManagerFilter::ManagerFilter() 
 {
-    // Get Stream Handlers
+    // Initialize structures: streams, vars, mutexes, etc.
     this->sOut = getOutputHandler("out");
     this->sNewWork = getInputHandler("newWork");
     this->sNeedMore = getInputHandler("needMore");
+    this->currVal = 0;
+    this->msgId = 1;
+    this->hasRequest = false;
+    pthread_mutex_init(&mWorkQueue, NULL);
+    pthread_mutex_init(&mStatus, NULL);
 
     // Open Log File
     log.open("manager.log", std::fstream::out);
-
-    // Init Mutex
-    pthread_mutex_init(&mWorkQueue, NULL);
 
     // Set event handlers
     setHandler( sNewWork, &ManagerFilter::handleNewWork );
     setHandler( sNeedMore, &ManagerFilter::handleNeedMore );
 
-    // Create and keep sending work
+    // Create initial work 
     // TODO
-    AHData* msg = new AHData(new int(1), sizeof(int), sOut);
-    sendMsg(msg);
 }
 
 // =================== //
@@ -44,11 +44,17 @@ ManagerFilter::handleNewWork(AHData* msg)
     log << "Got: " << val << std::endl;
     log << "Sent: " << val << std::endl;
 
-    // Add more work to the queue
+    // Handle response to request: increase msgId
+    pthread_mutex_lock(&mStatus);
+    if (this->hasRequest) 
+    {
+        this->msgId++;
+        this->hasRequest = false;
+    }
+    pthread_mutex_unlock(&mStatus);
+
+    // Add work received to queue
     // TODO
-    if (val == 26) val = -1;
-    AHData* m = new AHData(new int(val), sizeof(int), sOut);
-    sendMsg(m);
 
     delete msg;
     return 1; 
@@ -61,8 +67,18 @@ ManagerFilter::handleNeedMore(AHData* msg)
 {
     int val = *((int*)msg->getData());
 
-    // Mark who needs work
+    // Handle Work Request
+    if (this->currVal++ == 6) this->currVal = -1;
+    AHData* m = new AHData(new int(this->currVal), sizeof(int), sOut);
+    sendMsg(m);
+    
     // TODO
+    // If we have work, send to client and mark that he has work
+    // If we don't: 
+    //      mark that he doesn't have work
+    //      Loop through all known clients.
+    //      If none has work to do, we can stop
+    //      Send EOF message!
 
     delete msg;
     return 1; 

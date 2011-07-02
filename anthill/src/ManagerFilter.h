@@ -14,15 +14,17 @@ class ManagerFilter: public AHFilter
 
     private:
         std::ofstream log;
+        int msgId;
+        bool hasRequest;
+        int currVal;
 
         streamOutputHandler sOut;
         streamInputHandler sNewWork;
         streamInputHandler sNeedMore;
 
         pthread_mutex_t mWorkQueue;
+        pthread_mutex_t mStatus;
 
-        std::map<int,bool> needMore;
-        std::map<int,int> msgId;
         std::queue<int> workQueue;
 
         int handleNewWork(AHData* msg);

@@ -16,6 +16,7 @@ class ProcessFilter: public AHFilter
         std::queue<int> workQueue;
         bool stopWorking;
         int msgId;
+        int lastRequestId;
 
         pthread_t procThread;
         pthread_mutex_t mWorkQueue;
@@ -23,6 +24,7 @@ class ProcessFilter: public AHFilter
         pthread_mutex_t mLog;
 
         streamInputHandler sIn;
+        streamInputHandler sWorkRequest;
         streamOutputHandler sNewWork;
         streamOutputHandler sNeedMore;
 
@@ -31,6 +33,7 @@ class ProcessFilter: public AHFilter
         bool canStop();
 
         int handleNewWork(AHData* msg);
+        int handleWorkRequest(AHData* msg);
         constructFunctions(ProcessFilter);
 };
 
