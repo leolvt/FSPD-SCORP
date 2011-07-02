@@ -14,7 +14,7 @@ ProcessFilter::ProcessFilter()
     this->sNewWork = getOutputHandler("newWork");
     this->sNeedMore = getOutputHandler("needMore");
     pthread_mutex_init(&mWorkQueue, NULL);
-    pthread_mutex_init(&mWorkStatus, NULL);
+    pthread_mutex_init(&mStatus, NULL);
     pthread_mutex_init(&mLog, NULL);
     this->msgId = 1;
     this->lastRequestId = 0;
@@ -66,9 +66,9 @@ bool
 ProcessFilter::canStop()
 {
     bool value;
-    pthread_mutex_lock(&mWorkStatus);
+    pthread_mutex_lock(&mStatus);
     value = stopWorking;
-    pthread_mutex_unlock(&mWorkStatus);
+    pthread_mutex_unlock(&mStatus);
     return value;
 }
 
@@ -133,11 +133,13 @@ ProcessFilter::process(void* param)
         pthread_mutex_lock(&pf->mLog);
         pf->log << "Asking for more work." << std::endl;
         pthread_mutex_unlock(&pf->mLog);
+        pthread_mutex_lock(&pf->mStatus);
         int* needMoreData = new int [2];
         needMoreData[0] = pf->getMyRank();
         needMoreData[1] = pf->msgId;
         AHData* data = new AHData(needMoreData, sizeof(int)*2, pf->sNeedMore);
         pf->sendMsg(data);
+        pthread_mutex_unlock(&pf->mStatus);
 
         // I needed a sleep here to actually make it work, as otherwise no
         // processing was done to receive the message with more work
@@ -161,6 +163,7 @@ ProcessFilter::process(void* param)
 int
 ProcessFilter::handleNewWork(AHData* msg)
 {
+    // TODO: Change message handling and EOW
     // Translate the data to the work
     int val = *((int*)msg->getData());
     pthread_mutex_lock(&mLog);
@@ -171,9 +174,9 @@ ProcessFilter::handleNewWork(AHData* msg)
     if (val == -1) 
     {
         // Received stop work signal
-        pthread_mutex_lock(&mWorkStatus);
+        pthread_mutex_lock(&mStatus);
         stopWorking = true;
-        pthread_mutex_unlock(&mWorkStatus);
+        pthread_mutex_unlock(&mStatus);
     }
     else
     {
@@ -181,7 +184,9 @@ ProcessFilter::handleNewWork(AHData* msg)
         pthread_mutex_lock(&mWorkQueue);
         workQueue.push(val);
         pthread_mutex_unlock(&mWorkQueue);
+        pthread_mutex_lock(&mStatus);
         msgId++;
+        pthread_mutex_unlock(&mStatus);
     }
 
     return 0; 

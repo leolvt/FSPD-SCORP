@@ -20,7 +20,7 @@ class ProcessFilter: public AHFilter
 
         pthread_t procThread;
         pthread_mutex_t mWorkQueue;
-        pthread_mutex_t mWorkStatus;
+        pthread_mutex_t mStatus;
         pthread_mutex_t mLog;
 
         streamInputHandler sIn;

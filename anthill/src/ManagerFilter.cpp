@@ -39,10 +39,9 @@ ManagerFilter::~ManagerFilter()
 int
 ManagerFilter::handleNewWork(AHData* msg)
 {
+    // TODO: Change work handling and logging
+    // (perhaps use mutex for the lgo.)
     int val = *((int*)msg->getData());
-
-    log << "Got: " << val << std::endl;
-    log << "Sent: " << val << std::endl;
 
     // Handle response to request: increase msgId
     pthread_mutex_lock(&mStatus);
@@ -68,6 +67,8 @@ ManagerFilter::handleNeedMore(AHData* msg)
     int val = *((int*)msg->getData());
 
     // Handle Work Request
+    // TODO: Converto to int*: (id, msgId)
+    // Check if we should answer the request.
     if (this->currVal++ == 6) this->currVal = -1;
     AHData* m = new AHData(new int(this->currVal), sizeof(int), sOut);
     sendMsg(m);
