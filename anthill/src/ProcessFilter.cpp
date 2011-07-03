@@ -16,6 +16,7 @@ ProcessFilter::ProcessFilter()
     this->sWorkRequest = getInputHandler("workRequest");
     this->sNewWork = getOutputHandler("newWork");
     this->sNeedMore = getOutputHandler("needMore");
+    this->sQCOut = getOutputHandler("qcOut");
     pthread_mutex_init(&mWorkQueue, NULL);
     pthread_mutex_init(&mStatus, NULL);
     pthread_mutex_init(&mLog, NULL);
@@ -29,6 +30,13 @@ ProcessFilter::ProcessFilter()
     filename += '0' + getMyRank();
     filename += ".log";
     log.open(filename.c_str(), std::fstream::out);
+
+    // Build Initial Structures
+    int numVertices;
+    string graphFile = getArgument("n");
+    parseInput(graphFile, edges, numVertices);
+    this->gamma = atof(getArgument("g").c_str());
+    this->minQCSize = atoi(getArgument("q").c_str());
 
     // Set handler for incomming work
     setHandler( sIn, &ProcessFilter::handleNewWork );
@@ -120,17 +128,39 @@ ProcessFilter::process(void* param)
 
             // Get work from queue
             pthread_mutex_lock(&pf->mWorkQueue);
-            cand_t candidate = pf->workQueue.front();
+            Candidate candidate = pf->workQueue.front();
             pf->workQueue.pop();
             int qSize = pf->workQueue.size();
             pthread_mutex_unlock(&pf->mWorkQueue);
 
             // Do Some Work
-            // TODO: Call functions here
+            Candidate qc;
+            bool found;
+            std::list<Candidate> newCands = processCand(candidate, pf->gamma, 
+                                                    pf->minQCSize, pf->edges,
+                                                    qc, found);
+            // Send QuasiClique if it was found
+            if (found)
+            {
+                std::list<Candidate> qcList;
+                qcList.push_back(qc);
+                size_t msgSize;
+                int* qciMsg = list2Msg(qcList, pf->getMyRank(), msgSize);
+                AHData* qcMsg = new AHData(qciMsg, msgSize, pf->sQCOut);
+                pf->sendMsg(qcMsg);
+            }
+
+            std::list<Candidate>::iterator it;
+            pthread_mutex_lock(&pf->mWorkQueue);
+            for (it = newCands.begin(); it != newCands.end(); it++)
+            {
+                pf->workQueue.push(*it);
+            }
+            pthread_mutex_unlock(&pf->mWorkQueue);
             
             // Log work done
             pthread_mutex_lock(&pf->mLog);
-            pf->log << "Done some Work!! " << std::endl;
+            pf->log << "Processed new candidate" << std::endl;
             pthread_mutex_unlock(&pf->mLog);
         }   
 
@@ -162,6 +192,7 @@ ProcessFilter::process(void* param)
     pthread_mutex_unlock(&pf->mLog);
     pf->closeEventList(pf->sIn);
     pf->closeEventList(pf->sWorkRequest);
+
     return 0;
 }
 
@@ -200,10 +231,10 @@ ProcessFilter::handleNewWork(AHData* msg)
         std::cout << "<< INSIDE handleNewWork >>" << std::endl;
         std::cout << "<< MSG: "<< pMsg <<" >>" << std::endl;
         std::cout << "<< RANK: "<< getMyRank() <<" >>" << std::endl;
-        std::list<cand_t> newSets = msg2List(pMsg);
+        std::list<Candidate> newSets = msg2List(pMsg);
 
         pthread_mutex_lock(&mWorkQueue);
-        std::list<cand_t>::iterator it;
+        std::list<Candidate>::iterator it;
         for (it = newSets.begin(); it != newSets.end(); it++)
         {
             workQueue.push(*it);
@@ -252,11 +283,11 @@ ProcessFilter::handleWorkRequest(AHData* msg)
     pthread_mutex_lock(&mWorkQueue);
     int halfWorkAmount = workQueue.size() / 2;
     int totalWorkSent = 0;
-    std::list<cand_t> worksToSend;
+    std::list<Candidate> worksToSend;
     while (totalWorkSent < halfWorkAmount)
     {
         // Gather IntSets
-        cand_t& candidate = workQueue.front();
+        Candidate& candidate = workQueue.front();
         worksToSend.push_back(candidate);
         workQueue.pop();
         totalWorkSent++;

@@ -6,7 +6,8 @@
 
 	<placement>
 		<filter name="ManagerFilter" libname="libmanager.so" instances="1"/> 
-		<filter name="ProcessFilter" libname="libprocess.so" instances="16"/> 
+		<filter name="ProcessFilter" libname="libprocess.so" instances="4"/> 
+		<filter name="PrinterFilter" libname="libprinter.so" instances="1"/> 
     </placement>
 
 	<layout>
@@ -25,6 +26,10 @@
 		<stream>
 			<from filter="ProcessFilter" port="needMore"/>
 			<to filter="ManagerFilter" port="needMore"/>
+		</stream>
+		<stream>
+			<from filter="ProcessFilter" port="qcOut"/>
+			<to filter="PrinterFilter" port="in"/>
 		</stream>
     </layout>
 

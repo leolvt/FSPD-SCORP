@@ -1,8 +1,40 @@
 #include <string>
+#include <fstream>
 #include <sstream>
 #include <cstring>
 #include <iostream>
 #include "Util.h"
+
+// =================== //
+
+bool parseInput(std::string filename, adjHash& edges, int& numVertices) {
+
+    // Open file
+    std::ifstream iFile(filename.c_str(), std::ifstream::in);
+    numVertices = 0;
+    int numEdges;
+
+    if (!iFile.is_open()) {
+        return false;
+    }
+
+    // Read number of Vertices
+    iFile >> numVertices;
+
+    // Read neighbourhood
+    for (int i = 0; i < numVertices; i++) {
+        int numNeighbours;
+        iFile >> numNeighbours;
+        while (numNeighbours-- > 0)
+        {
+            int neighbour;
+            iFile >> neighbour;
+            edges[i+1].insert(neighbour);
+        }
+    }
+
+    return true;
+}
 
 // =================== //
 
@@ -22,12 +54,12 @@ buildEowMsg(size_t& msgSize)
  * Return the msg size on msgSize parameter
  */
 int* 
-list2Msg(std::list<cand_t> l, int id, size_t& msgSize)
+list2Msg(std::list<Candidate> l, int id, size_t& msgSize)
 {
     // Compute list size
     int count  = 0;
     count += 2; // Add space to id and list size.
-    std::list<cand_t>::iterator it;
+    std::list<Candidate>::iterator it;
     IntSet::iterator it2;
     for (it = l.begin(); it != l.end(); it++)
     {
@@ -70,31 +102,31 @@ list2Msg(std::list<cand_t> l, int id, size_t& msgSize)
 /**
  * Create a list of candidates from the message
  */
-std::list<cand_t> 
+std::list<Candidate> 
 msg2List(int* msg)
 {
     int numCands;
-    std::list<cand_t> results;
+    std::list<Candidate> results;
 
     numCands = msg[1];
     int idx = 2;
     // Grab each candidate and put on the list
     while (numCands-- > 0) 
     {
-        cand_t currCand;
+        Candidate currCand;
         int X_size = msg[idx++];
         int candExt_size = msg[idx++];
 
         // Grab X elements
         while (X_size-- > 0)
         {
-            currCand.X.push_back(msg[idx++]);
+            currCand.X.insert(msg[idx++]);
         }
 
         // Grab candExt elements
         while (candExt_size-- > 0)
         {
-            currCand.candExt.push_back(msg[idx++]);
+            currCand.candExt.insert(msg[idx++]);
         }
 
         results.push_back(currCand);
@@ -191,7 +223,7 @@ msg2List2(char* msg)
         while (setSize-- > 0)
         {
             ss >> i;
-            set.push_back(i);
+            set.insert(i);
             std::cout << i << " ";
         }
         results.push_back(set);

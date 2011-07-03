@@ -1,3 +1,4 @@
+#include <cmath>
 #include <fstream>
 
 #include "Util.h"
@@ -23,12 +24,7 @@ ManagerFilter::ManagerFilter()
     log.open("manager.log", std::fstream::out);
 
     // Create initial work 
-    // TODO
-    cand_t C;
-    C.X.push_back(1);
-    C.candExt.push_back(2);
-    C.candExt.push_back(3);
-    workQueue.push(C);
+    buildInitialWork();
     
     // Set event handlers
     setHandler( sNewWork, &ManagerFilter::handleNewWork );
@@ -45,12 +41,45 @@ ManagerFilter::~ManagerFilter()
 
 // =================== //
 
+void
+ManagerFilter::buildInitialWork()
+{
+    // Get Params and Read Graph
+    int numVertices;
+    string graphFile = getArgument("n");
+    parseInput(graphFile, edges, numVertices);
+    this->gamma = atof(getArgument("g").c_str());
+    this->minQCSize = atoi(getArgument("q").c_str());
+
+    // Initially, all vertices ar in candExt
+    Candidate start;
+    for (int i = 1; i <= numVertices; i++) {
+        start.candExt.insert(i);
+    }
+
+    // Remove vertices that obviously are not candidates 
+    int min = (int) ceil(gamma*(minQCSize-1));
+    IntSet::iterator it = start.candExt.begin();
+    while (it != start.candExt.end()) {
+        IntSet::iterator aux = it;
+        it++;
+        if (edges[*aux].size() < min) {
+            start.candExt.erase(aux);
+        }
+    }
+
+    // Add it as new work
+    workQueue.push(start);
+}
+
+// =================== //
+
 int
 ManagerFilter::handleNewWork(AHData* msg)
 {
     // Convert Msg
     int* cMsg = (int*) msg->getData();
-    std::list<cand_t> newWork = msg2List(cMsg);
+    std::list<Candidate> newWork = msg2List(cMsg);
     pthread_mutex_lock(&mLog);
     log << "Received work, "  << newWork.size() << " more candidates." << std::endl;
     pthread_mutex_unlock(&mLog);
@@ -67,7 +96,7 @@ ManagerFilter::handleNewWork(AHData* msg)
 
     // Add work received to queue
     pthread_mutex_lock(&mWorkQueue);
-    std::list<cand_t>::iterator it;
+    std::list<Candidate>::iterator it;
     for (it = newWork.begin(); it != newWork.end(); it++)
     {
         this->workQueue.push(*it);
@@ -107,7 +136,7 @@ ManagerFilter::handleNeedMore(AHData* msg)
         lastId[pId]++;
 
         // Build char message
-        std::list<cand_t> workToSend;
+        std::list<Candidate> workToSend;
         workToSend.push_front(workQueue.front());
         workQueue.pop();
         pMsg = list2Msg(workToSend, pId, msgSize);

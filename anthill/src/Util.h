@@ -2,22 +2,19 @@
 #define UTIL_H
 
 #include <list>
-#include <vector>
+#include "QuasiClique.h"
 
 #define EOW_ID -1 
 
-// TODO: Find better place for this
-typedef std::vector<int> IntSet;
-typedef struct {
-    IntSet X;
-    IntSet candExt;
-} cand_t;
+// ========================== //
+
+bool parseInput(std::string filename, adjHash& edges, int& numVertices);
 
 // ========================== //
 
 int* buildEowMsg(size_t &msgSize);
-int* list2Msg(std::list<cand_t> l, int id, size_t& msgSize);
-std::list<cand_t> msg2List(int* msg);
+int* list2Msg(std::list<Candidate> l, int id, size_t& msgSize);
+std::list<Candidate> msg2List(int* msg);
 int msg2Id(int* msg);
 
 // ========================== //

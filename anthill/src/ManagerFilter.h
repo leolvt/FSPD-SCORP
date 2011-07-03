@@ -24,6 +24,10 @@ class ManagerFilter: public AHFilter
         bool hasRequest;
         int currVal;
 
+        double gamma;
+        int minQCSize;
+        adjHash edges;
+
         streamOutputHandler sOut;
         streamOutputHandler sWorkRequest;
         streamInputHandler sNewWork;
@@ -35,8 +39,9 @@ class ManagerFilter: public AHFilter
 
         std::map<int,int> lastId;
         std::map<int,bool> hasWork;
-        std::queue<cand_t> workQueue;
+        std::queue<Candidate> workQueue;
 
+        void buildInitialWork();
         int handleNewWork(AHData* msg);
         int handleNeedMore(AHData* msg);
         constructFunctions(ManagerFilter);

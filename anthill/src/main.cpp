@@ -7,12 +7,12 @@ typedef int Work;
 
 int main(int argc, char *argv[]) {
     // Handle arguments
-    if (argc != 3) {
+    if (argc < 3) {
         printf("Usage: %s -o <OUTFILENAME>\n", argv[0]);
         exit(0);
     }
 
-    //pvm_catchout(stdout);
+    pvm_catchout(stdout);
 
     // Create a new work
     Work *work = (Work *) malloc( sizeof(Work) );
