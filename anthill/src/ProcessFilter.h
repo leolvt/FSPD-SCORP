@@ -1,9 +1,16 @@
 #ifndef PROCESS_FILTER_H
 #define PROCESS_FILTER_H
 
+/* TODO: 
+ * - Move IntSet from Util.h
+ * - Define EOW_ID elsewhere
+ */
 #include <queue>
 #include <fstream>
+#include "Util.h"
 #include "eventAPI.h"
+
+#define EOW_ID -1
 
 class ProcessFilter: public AHFilter
 {
@@ -13,8 +20,9 @@ class ProcessFilter: public AHFilter
 
     private:
         std::ofstream log;
-        std::queue<int> workQueue;
+        std::queue<IntSet> workQueue;
         bool stopWorking;
+        bool waitingForMore;
         int msgId;
         int lastRequestId;
 

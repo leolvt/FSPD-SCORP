@@ -1,4 +1,7 @@
+#include <list>
+
 #include "ProcessFilter.h"
+#include "Util.h"
 
 // =================== //
 
@@ -18,6 +21,7 @@ ProcessFilter::ProcessFilter()
     pthread_mutex_init(&mLog, NULL);
     this->msgId = 1;
     this->lastRequestId = 0;
+    this->waitingForMore = false;
     this->stopWorking = false;
 
     // Open Log File
@@ -116,8 +120,9 @@ ProcessFilter::process(void* param)
 
             // Get work from queue
             pthread_mutex_lock(&pf->mWorkQueue);
-            int val = pf->workQueue.front();
+            IntSet set = pf->workQueue.front();
             pf->workQueue.pop();
+            int qSize = pf->workQueue.size();
             pthread_mutex_unlock(&pf->mWorkQueue);
 
             // Do Some Work
@@ -125,7 +130,7 @@ ProcessFilter::process(void* param)
             
             // Log work done
             pthread_mutex_lock(&pf->mLog);
-            pf->log << "Produced and sent work: " << val << std::endl;
+            pf->log << "Done some Work!! " << qSize << std::endl;
             pthread_mutex_unlock(&pf->mLog);
         }   
 
@@ -137,6 +142,7 @@ ProcessFilter::process(void* param)
         int* needMoreData = new int [2];
         needMoreData[0] = pf->getMyRank();
         needMoreData[1] = pf->msgId;
+        pf->waitingForMore = true;
         AHData* data = new AHData(needMoreData, sizeof(int)*2, pf->sNeedMore);
         pf->sendMsg(data);
         pthread_mutex_unlock(&pf->mStatus);
@@ -144,12 +150,16 @@ ProcessFilter::process(void* param)
         // I needed a sleep here to actually make it work, as otherwise no
         // processing was done to receive the message with more work
         sleep(1);
+        
     }
     
     /*
      * When we can safely stop working, close the event lists, 
      * breaking the message loop.
      */
+    pthread_mutex_lock(&pf->mLog);
+    pf->log << "Closing event lists" << std::endl;
+    pthread_mutex_unlock(&pf->mLog);
     pf->closeEventList(pf->sIn);
     pf->closeEventList(pf->sWorkRequest);
     return 0;
@@ -163,29 +173,49 @@ ProcessFilter::process(void* param)
 int
 ProcessFilter::handleNewWork(AHData* msg)
 {
-    // TODO: Change message handling and EOW
     // Translate the data to the work
-    int val = *((int*)msg->getData());
-    pthread_mutex_lock(&mLog);
-    log << "Received: " << val << std::endl;
-    pthread_mutex_unlock(&mLog);
+    char* cMsg = (char *) msg->getData();
+    int id = msg2Id(cMsg);
+    if (id != getMyRank() && id != EOW_ID) return 0;
   
     // Check for message type
-    if (val == -1) 
+    if (id == EOW_ID) 
     {
-        // Received stop work signal
+        pthread_mutex_lock(&mLog);
+        log << "Received End of Work." << std::endl;
+        pthread_mutex_unlock(&mLog);
+        
         pthread_mutex_lock(&mStatus);
         stopWorking = true;
         pthread_mutex_unlock(&mStatus);
     }
     else
     {
-        // Put it on the queue
+        // Log it
+        pthread_mutex_lock(&mLog);
+        log << "Received new message" << std::endl;
+        pthread_mutex_unlock(&mLog);
+
+        // Read and put it on the queue
+        std::cout << "<< INSIDE handleNewWork >>" << std::endl;
+        std::cout << "<< MSG: "<< cMsg <<" >>" << std::endl;
+        std::cout << "<< RANK: "<< getMyRank() <<" >>" << std::endl;
+        std::list<IntSet> newSets = msg2List(cMsg);
+
         pthread_mutex_lock(&mWorkQueue);
-        workQueue.push(val);
+        std::list<IntSet>::iterator it;
+        for (it = newSets.begin(); it != newSets.end(); it++)
+        {
+            workQueue.push(*it);
+        }
         pthread_mutex_unlock(&mWorkQueue);
+
+        // Update Msg ID
         pthread_mutex_lock(&mStatus);
-        msgId++;
+        if (waitingForMore) {
+            waitingForMore = false;
+            msgId++;
+        }
         pthread_mutex_unlock(&mStatus);
     }
 
@@ -210,20 +240,39 @@ ProcessFilter::handleWorkRequest(AHData* msg)
 
     // Check message ID
     // We only answer to expected message
-    if (requestId <= this->lastRequestId) return 0;
+    pthread_mutex_lock(&mStatus);
+    if (requestId <= this->lastRequestId) 
+    {   
+        pthread_mutex_unlock(&mStatus);
+        return 0;
+    }
+    pthread_mutex_unlock(&mStatus);
 
     // Lock work queue and send half of current work to the manager
     pthread_mutex_lock(&mWorkQueue);
     int halfWorkAmount = workQueue.size() / 2;
     int totalWorkSent = 0;
+    std::list<IntSet> worksToSend;
     while (totalWorkSent < halfWorkAmount)
     {
-        // Send work
-        // TODO
+        // Gather IntSets
+        IntSet set = workQueue.front();
+        worksToSend.push_back(set);
+        workQueue.pop();
         totalWorkSent++;
     }
+    pthread_mutex_lock(&mStatus);
     this->lastRequestId++;    
+    pthread_mutex_unlock(&mStatus);
     pthread_mutex_unlock(&mWorkQueue);
+
+    // Create and send msg
+    if (!worksToSend.empty()) {
+        char* cMsg = list2Msg(worksToSend, 0);
+        size_t msgSize = sizeof(char) * (strlen(cMsg)+1);
+        AHData* data = new AHData(cMsg, msgSize, sNewWork);
+        sendMsg(data);
+    }
 
     return 0; 
 }

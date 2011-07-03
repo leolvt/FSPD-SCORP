@@ -11,13 +11,18 @@ set(LIBS ${LIBS} ds expat ahevent)
 include_directories(${ANTHILL_INC})
 link_directories(${ANTHILL_LIB})
 
-add_library(manager SHARED ManagerFilter.cpp)
+set(COMMON_SRC Util.cpp)
+set(MANAGER_SRC ${COMMON_SRC} ManagerFilter.cpp)
+set(PROCESS_SRC ${COMMON_SRC} ProcessFilter.cpp)
+set(MAIN_SRC main.cpp)
+
+add_library(manager SHARED ${MANAGER_SRC})
 target_link_libraries(manager ${LIBS})
 
-add_library(process SHARED ProcessFilter.cpp)
+add_library(process SHARED ${PROCESS_SRC})
 target_link_libraries(process ${LIBS})
 
-add_executable(main main.cpp)
+add_executable(main ${MAIN_SRC})
 target_link_libraries(main ${LIBS})
 
 install(TARGETS manager process main DESTINATION bin)

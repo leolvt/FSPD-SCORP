@@ -6,7 +6,7 @@
 
 	<placement>
 		<filter name="ManagerFilter" libname="libmanager.so" instances="1"/> 
-		<filter name="ProcessFilter" libname="libprocess.so" instances="1"/> 
+		<filter name="ProcessFilter" libname="libprocess.so" instances="16"/> 
     </placement>
 
 	<layout>

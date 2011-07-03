@@ -12,6 +12,8 @@ int main(int argc, char *argv[]) {
         exit(0);
     }
 
+    //pvm_catchout(stdout);
+
     // Create a new work
     Work *work = (Work *) malloc( sizeof(Work) );
     *work = 26;
