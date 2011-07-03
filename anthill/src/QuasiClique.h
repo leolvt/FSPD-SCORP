@@ -12,12 +12,11 @@ typedef struct {
     IntSet candExt;
 } Candidate;
 
-std::list<Candidate> 
-processCand(Candidate C, double gamma, int minSize, adjHash& edges, 
+bool isSuperSet(IntSet& A, IntSet& B);
+std::list<Candidate> processCand(Candidate C, double gamma, int minSize, adjHash& edges, 
         Candidate& qc, bool& found);
 
-void
-findQuasiCliques(IntSet vset, adjHash& edges, double gamma, int minSize);
+void findQuasiCliques(IntSet vset, adjHash& edges, double gamma, int minSize);
 
 
 #endif  /* SCORP_QUASI_CLIQUE_H */

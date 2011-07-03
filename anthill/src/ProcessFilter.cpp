@@ -45,7 +45,7 @@ ProcessFilter::ProcessFilter()
     // Create thread to process data
     pthread_create(&procThread, NULL, &ProcessFilter::process, this);
     pthread_mutex_lock(&mLog);
-    log << "Create Process thread!" << std::endl;
+//    log << "Create Process thread!" << std::endl;
     pthread_mutex_unlock(&mLog);
 }
 
@@ -150,13 +150,27 @@ ProcessFilter::process(void* param)
                 pf->sendMsg(qcMsg);
             }
 
-            std::list<Candidate>::iterator it;
+            // Send half of the work done back to manager
+            // and store the other half 
             pthread_mutex_lock(&pf->mWorkQueue);
-            for (it = newCands.begin(); it != newCands.end(); it++)
+            int halfWorkAmount = newCands.size() / 2;
+            int totalWorkSent = 0;
+            while (totalWorkSent < halfWorkAmount)
             {
-                pf->workQueue.push(*it);
+                Candidate& candidate = newCands.front();
+                pf->workQueue.push(candidate);
+                newCands.pop_front();
+                totalWorkSent++;
             }
             pthread_mutex_unlock(&pf->mWorkQueue);
+            
+            // Create and send msg
+            if (!newCands.empty()) {
+                size_t msgSize;
+                int* pMsg = list2Msg(newCands, 0, msgSize);
+                AHData* data = new AHData(pMsg, msgSize, pf->sNewWork);
+                pf->sendMsg(data);
+            }
             
             // Log work done
             pthread_mutex_lock(&pf->mLog);
@@ -179,7 +193,7 @@ ProcessFilter::process(void* param)
 
         // I needed a sleep here to actually make it work, as otherwise no
         // processing was done to receive the message with more work
-        sleep(1);
+        usleep(500);
         
     }
     
@@ -213,7 +227,7 @@ ProcessFilter::handleNewWork(AHData* msg)
     if (id == EOW_ID) 
     {
         pthread_mutex_lock(&mLog);
-        log << "Received End of Work." << std::endl;
+//        log << "Received End of Work." << std::endl;
         pthread_mutex_unlock(&mLog);
         
         pthread_mutex_lock(&mStatus);
@@ -224,7 +238,7 @@ ProcessFilter::handleNewWork(AHData* msg)
     {
         // Log it
         pthread_mutex_lock(&mLog);
-        log << "Received new message" << std::endl;
+//        log << "Received new message" << std::endl;
         pthread_mutex_unlock(&mLog);
 
         // Read and put it on the queue
@@ -266,7 +280,7 @@ ProcessFilter::handleWorkRequest(AHData* msg)
 
     // Log request
     pthread_mutex_lock(&mLog);
-    log << "Received Work Request from manager." << std::endl;
+//    log << "Received Work Request from manager." << std::endl;
     pthread_mutex_unlock(&mLog);
 
     // Check message ID

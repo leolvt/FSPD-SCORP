@@ -7,6 +7,22 @@
 
 // =================== //
 
+bool
+isSuperSet(IntSet& A, IntSet& B)
+{
+    IntSet::iterator it;
+    for (it = B.begin(); it != B.end(); it++)
+    {
+        if (A.find(*it) == A.end())
+        {
+            return false;
+        }
+    }
+    return true;
+}
+
+// =================== //
+
 IntSet
 getReachable(IntSet X, adjHash& edges, int k) {
     if (k == 0) {
@@ -24,7 +40,10 @@ getReachable(IntSet X, adjHash& edges, int k) {
 
 bool 
 isQC(IntSet vSet, adjHash& edges, double gamma, int minSize) {
-    if (vSet.size() < minSize) return false;
+    if (vSet.size() < minSize) 
+    {
+        return false;
+    }
     int threshold = (int) ceil(gamma*(vSet.size()-1));
     IntSet::iterator u;
     IntSet::iterator v;
@@ -35,7 +54,10 @@ isQC(IntSet vSet, adjHash& edges, double gamma, int minSize) {
                 degree++;
             }
         }
-        if (degree < minSize) return false;
+        if (degree < threshold) 
+        {
+            return false;
+        }
     }
     return true;
 }
@@ -53,13 +75,13 @@ processCand(Candidate C, double gamma, int minSize, adjHash& edges,
     std::cout << "====== X SET: =======" << std::endl;
     for (it = C.X.begin(); it != C.X.end(); it++)
     {
-        std::cout << *it << " " << std::endl;
+        std::cout << *it << " ";
     }
     std::cout << std::endl;
     std::cout << "====== candExt SET: =======" << std::endl;
     for (it = C.candExt.begin(); it != C.candExt.end(); it++)
     {
-        std::cout << *it << " " << std::endl;
+        std::cout << *it << " "; 
     }
     std::cout << std::endl;
 
@@ -78,7 +100,6 @@ processCand(Candidate C, double gamma, int minSize, adjHash& edges,
             }
         }
     } 
-
     // Degree prunning
     int threshold = (int) ceil(gamma*(minSize-1));
     it = C.candExt.begin();;
@@ -173,7 +194,8 @@ processCand(Candidate C, double gamma, int minSize, adjHash& edges,
     {
         C.candExt.clear();
     }
-
+/*
+*/
     // Check if Union is quasiclique
     IntSet Union(C.X);
     Union.insert(C.candExt.begin(), C.candExt.end());
@@ -183,6 +205,7 @@ processCand(Candidate C, double gamma, int minSize, adjHash& edges,
         // tree.
         // TODO: send QuasiClique
         // Build and send Msg
+        std::cout << "UNION is QuasiCLique" << std::endl;
         qc.X = Union;
         found = true;
     }
@@ -191,8 +214,9 @@ processCand(Candidate C, double gamma, int minSize, adjHash& edges,
         // Checa X
         if ( isQC(C.X, edges, gamma, minSize) ) 
         {
-            qc.X = Union;
+            qc.X = C.X;
             found = true;
+            std::cout << "X is QuasiCLique" << std::endl;
             /* TODO: send quasiClique
             IntSet::iterator it;
             for (it = C.X.begin(); it != C.X.end(); it++) {

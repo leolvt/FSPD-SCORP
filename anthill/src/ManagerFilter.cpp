@@ -81,7 +81,7 @@ ManagerFilter::handleNewWork(AHData* msg)
     int* cMsg = (int*) msg->getData();
     std::list<Candidate> newWork = msg2List(cMsg);
     pthread_mutex_lock(&mLog);
-    log << "Received work, "  << newWork.size() << " more candidates." << std::endl;
+//    log << "Received work, "  << newWork.size() << " more candidates." << std::endl;
     pthread_mutex_unlock(&mLog);
 
 
@@ -117,8 +117,8 @@ ManagerFilter::handleNeedMore(AHData* msg)
     int mId = iMsg[1];
 
     pthread_mutex_lock(&mLog);
-    log << "Received work request from " << pId << " with mId: " << mId;
-    log << ", expected mId: " << lastId[pId]+1 << std::endl;
+//    log << "Received work request from " << pId << " with mId: " << mId;
+//    log << ", expected mId: " << lastId[pId]+1 << std::endl;
     pthread_mutex_unlock(&mLog);
 
     // Handle Work Request
