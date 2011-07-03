@@ -11,7 +11,6 @@
 #include "eventAPI.h"
 #include "Util.h"
 
-#define EOW_ID -1
 
 class ManagerFilter: public AHFilter
 {
@@ -36,7 +35,7 @@ class ManagerFilter: public AHFilter
 
         std::map<int,int> lastId;
         std::map<int,bool> hasWork;
-        std::queue<IntSet> workQueue;
+        std::queue<cand_t> workQueue;
 
         int handleNewWork(AHData* msg);
         int handleNeedMore(AHData* msg);

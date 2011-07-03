@@ -24,11 +24,11 @@ ManagerFilter::ManagerFilter()
 
     // Create initial work 
     // TODO
-    IntSet is;
-    is.push_back(1);
-    is.push_back(2);
-    is.push_back(3);
-    workQueue.push(is);
+    cand_t C;
+    C.X.push_back(1);
+    C.candExt.push_back(2);
+    C.candExt.push_back(3);
+    workQueue.push(C);
     
     // Set event handlers
     setHandler( sNewWork, &ManagerFilter::handleNewWork );
@@ -49,10 +49,10 @@ int
 ManagerFilter::handleNewWork(AHData* msg)
 {
     // Convert Msg
-    char* cMsg = (char*) msg->getData();
-    std::list<IntSet> newWork = msg2List(cMsg);
+    int* cMsg = (int*) msg->getData();
+    std::list<cand_t> newWork = msg2List(cMsg);
     pthread_mutex_lock(&mLog);
-    log << "Received work, "  << newWork.size() << " more sets." << std::endl;
+    log << "Received work, "  << newWork.size() << " more candidates." << std::endl;
     pthread_mutex_unlock(&mLog);
 
 
@@ -67,7 +67,7 @@ ManagerFilter::handleNewWork(AHData* msg)
 
     // Add work received to queue
     pthread_mutex_lock(&mWorkQueue);
-    std::list<IntSet>::iterator it;
+    std::list<cand_t>::iterator it;
     for (it = newWork.begin(); it != newWork.end(); it++)
     {
         this->workQueue.push(*it);
@@ -96,7 +96,8 @@ ManagerFilter::handleNeedMore(AHData* msg)
     // Check if we should answer the request.
     if (mId <= lastId[pId] ) return 1;
 
-    char* cMsg;
+    int* pMsg;
+    size_t msgSize = 0;
     pthread_mutex_lock(&mWorkQueue);
     // If we have work
     if (!workQueue.empty()) 
@@ -106,10 +107,10 @@ ManagerFilter::handleNeedMore(AHData* msg)
         lastId[pId]++;
 
         // Build char message
-        std::list<IntSet> workToSend;
+        std::list<cand_t> workToSend;
         workToSend.push_front(workQueue.front());
         workQueue.pop();
-        cMsg = list2Msg(workToSend, pId);
+        pMsg = list2Msg(workToSend, pId, msgSize);
     }
     // If we don't have work
     else
@@ -132,7 +133,7 @@ ManagerFilter::handleNeedMore(AHData* msg)
         // If none has work to do, we can stop
         if (!someWork) 
         {
-            cMsg = buildEowMsg();
+            pMsg = buildEowMsg(msgSize);
             closeEventList(this->sNeedMore);
             closeEventList(this->sNewWork);
         }
@@ -148,17 +149,16 @@ ManagerFilter::handleNeedMore(AHData* msg)
                 sendMsg(askForMore);
             }
             pthread_mutex_unlock(&mStatus);
-            cMsg = 0;
+            pMsg = 0;
         }
     }
     pthread_mutex_unlock(&mWorkQueue);
 
-    if (cMsg != NULL)
+    if (msgSize != 0)
     {
-        size_t msgSize = sizeof(char) * (strlen(cMsg) + 1);
         std::cout << ">>>>> MANAGER <<<<<<" << std::endl;
-        std::cout << " >> MSG: " << cMsg << std::endl;
-        AHData* d = new AHData(cMsg, msgSize, sOut);
+        std::cout << " >> MSG: " << pMsg << std::endl;
+        AHData* d = new AHData(pMsg, msgSize, sOut);
         sendMsg(d);
     }
 

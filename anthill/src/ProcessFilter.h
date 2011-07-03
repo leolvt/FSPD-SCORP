@@ -10,8 +10,6 @@
 #include "Util.h"
 #include "eventAPI.h"
 
-#define EOW_ID -1
-
 class ProcessFilter: public AHFilter
 {
     public:
@@ -20,7 +18,7 @@ class ProcessFilter: public AHFilter
 
     private:
         std::ofstream log;
-        std::queue<IntSet> workQueue;
+        std::queue<cand_t> workQueue;
         bool stopWorking;
         bool waitingForMore;
         int msgId;

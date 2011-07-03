@@ -6,8 +6,117 @@
 
 // =================== //
 
+int* 
+buildEowMsg(size_t& msgSize)
+{
+    msgSize = 1*sizeof(int);
+    int* pMsg = new int(EOW_ID);
+    return pMsg;
+}
+
+// =================== //
+
+/**
+ * Create message from a list of candidates.
+ * Format: ID list_size [X.size candExt.size x1 x2 ... candExt1 ...] ...
+ * Return the msg size on msgSize parameter
+ */
+int* 
+list2Msg(std::list<cand_t> l, int id, size_t& msgSize)
+{
+    // Compute list size
+    int count  = 0;
+    count += 2; // Add space to id and list size.
+    std::list<cand_t>::iterator it;
+    IntSet::iterator it2;
+    for (it = l.begin(); it != l.end(); it++)
+    {
+        int cand_size = 2; // X size and candExt size
+        cand_size += it->X.size();
+        cand_size += it->candExt.size();
+        count += cand_size;
+    }
+
+    // Create message
+    int* pMsg = new int [count];
+
+    // Fill id and list size
+    pMsg[0] = id;
+    pMsg[1] = l.size();
+    
+    // Fill the values
+    int idx = 2;
+    for (it = l.begin(); it != l.end(); it++)
+    {
+        pMsg[idx++] = it->X.size();
+        pMsg[idx++] = it->candExt.size();
+        for (it2 = it->X.begin(); it2 != it->X.end(); it2++)
+        {
+            pMsg[idx++] = *it2;
+        }
+        for (it2 = it->candExt.begin(); it2 != it->candExt.end(); it2++)
+        {
+            pMsg[idx++] = *it2;
+        }
+    }
+ 
+    msgSize = sizeof(int)*count;
+
+    return pMsg;
+}
+
+// =================== //
+
+/**
+ * Create a list of candidates from the message
+ */
+std::list<cand_t> 
+msg2List(int* msg)
+{
+    int numCands;
+    std::list<cand_t> results;
+
+    numCands = msg[1];
+    int idx = 2;
+    // Grab each candidate and put on the list
+    while (numCands-- > 0) 
+    {
+        cand_t currCand;
+        int X_size = msg[idx++];
+        int candExt_size = msg[idx++];
+
+        // Grab X elements
+        while (X_size-- > 0)
+        {
+            currCand.X.push_back(msg[idx++]);
+        }
+
+        // Grab candExt elements
+        while (candExt_size-- > 0)
+        {
+            currCand.candExt.push_back(msg[idx++]);
+        }
+
+        results.push_back(currCand);
+    }
+
+    return results;
+}
+
+// =================== //
+
+int 
+msg2Id(int* msg)
+{
+    return msg[0];
+}
+
+// =================== //
+// ================================================================= //
+// =================== //
+
 char* 
-buildEowMsg()
+buildEowMsg2()
 {
     char* cMsg = new char [3];
     strcpy(cMsg, "-1");
@@ -19,7 +128,7 @@ buildEowMsg()
 // =================== //
 
 char* 
-list2Msg(std::list<IntSet> l, int id)
+list2Msg2(std::list<IntSet> l, int id)
 {
     std::stringstream ss;
     std::string sMsg;
@@ -58,7 +167,7 @@ list2Msg(std::list<IntSet> l, int id)
 // =================== //
 
 std::list<IntSet> 
-msg2List(char* msg)
+msg2List2(char* msg)
 {
     int i;
     int numSets;
@@ -95,7 +204,7 @@ msg2List(char* msg)
 // =================== //
 
 int 
-msg2Id(char* msg)
+msg2Id2(char* msg)
 {
     int id;
     std::stringstream ss(msg);

@@ -120,7 +120,7 @@ ProcessFilter::process(void* param)
 
             // Get work from queue
             pthread_mutex_lock(&pf->mWorkQueue);
-            IntSet set = pf->workQueue.front();
+            cand_t candidate = pf->workQueue.front();
             pf->workQueue.pop();
             int qSize = pf->workQueue.size();
             pthread_mutex_unlock(&pf->mWorkQueue);
@@ -130,7 +130,7 @@ ProcessFilter::process(void* param)
             
             // Log work done
             pthread_mutex_lock(&pf->mLog);
-            pf->log << "Done some Work!! " << qSize << std::endl;
+            pf->log << "Done some Work!! " << std::endl;
             pthread_mutex_unlock(&pf->mLog);
         }   
 
@@ -174,8 +174,8 @@ int
 ProcessFilter::handleNewWork(AHData* msg)
 {
     // Translate the data to the work
-    char* cMsg = (char *) msg->getData();
-    int id = msg2Id(cMsg);
+    int* pMsg = (int *) msg->getData();
+    int id = msg2Id(pMsg);
     if (id != getMyRank() && id != EOW_ID) return 0;
   
     // Check for message type
@@ -198,12 +198,12 @@ ProcessFilter::handleNewWork(AHData* msg)
 
         // Read and put it on the queue
         std::cout << "<< INSIDE handleNewWork >>" << std::endl;
-        std::cout << "<< MSG: "<< cMsg <<" >>" << std::endl;
+        std::cout << "<< MSG: "<< pMsg <<" >>" << std::endl;
         std::cout << "<< RANK: "<< getMyRank() <<" >>" << std::endl;
-        std::list<IntSet> newSets = msg2List(cMsg);
+        std::list<cand_t> newSets = msg2List(pMsg);
 
         pthread_mutex_lock(&mWorkQueue);
-        std::list<IntSet>::iterator it;
+        std::list<cand_t>::iterator it;
         for (it = newSets.begin(); it != newSets.end(); it++)
         {
             workQueue.push(*it);
@@ -233,7 +233,7 @@ ProcessFilter::handleWorkRequest(AHData* msg)
 {
     int requestId = *((int*)msg->getData());
 
-    // Translate the data to the work
+    // Log request
     pthread_mutex_lock(&mLog);
     log << "Received Work Request from manager." << std::endl;
     pthread_mutex_unlock(&mLog);
@@ -252,12 +252,12 @@ ProcessFilter::handleWorkRequest(AHData* msg)
     pthread_mutex_lock(&mWorkQueue);
     int halfWorkAmount = workQueue.size() / 2;
     int totalWorkSent = 0;
-    std::list<IntSet> worksToSend;
+    std::list<cand_t> worksToSend;
     while (totalWorkSent < halfWorkAmount)
     {
         // Gather IntSets
-        IntSet set = workQueue.front();
-        worksToSend.push_back(set);
+        cand_t& candidate = workQueue.front();
+        worksToSend.push_back(candidate);
         workQueue.pop();
         totalWorkSent++;
     }
@@ -268,9 +268,9 @@ ProcessFilter::handleWorkRequest(AHData* msg)
 
     // Create and send msg
     if (!worksToSend.empty()) {
-        char* cMsg = list2Msg(worksToSend, 0);
-        size_t msgSize = sizeof(char) * (strlen(cMsg)+1);
-        AHData* data = new AHData(cMsg, msgSize, sNewWork);
+        size_t msgSize;
+        int* pMsg = list2Msg(worksToSend, 0, msgSize);
+        AHData* data = new AHData(pMsg, msgSize, sNewWork);
         sendMsg(data);
     }
 
